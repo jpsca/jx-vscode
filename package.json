@@ -1,0 +1,78 @@
+{
+  "name": "jinja-jx",
+  "displayName": "Jx",
+  "description": "Syntax highlighting, snippets, and go-to-definition for Jx (Jinja2 component library)",
+  "version": "0.1.0",
+  "publisher": "jpsca",
+  "icon": "icon.png",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets"
+  ],
+  "activationEvents": [
+    "onLanguage:jx"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "jx",
+        "aliases": [
+          "Jx",
+          "jx"
+        ],
+        "extensions": [
+          ".jinja"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "jx",
+        "scopeName": "text.html.jx",
+        "path": "./syntaxes/jx.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "jx",
+        "path": "./snippets/jx.code-snippets"
+      }
+    ],
+    "configuration": {
+      "title": "Jx",
+      "properties": {
+        "jx.check.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable diagnostics via jx check"
+        },
+        "jx.pythonPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to Python interpreter (leave empty to auto-detect from the Python extension or PATH)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "test": "tsc -p ./ && node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/test-electron": "^2.5.2",
+    "mocha": "^11.7.5",
+    "typescript": "^5.3.0",
+    "vscode-oniguruma": "^2.0.1",
+    "vscode-textmate": "^9.3.2"
+  }
+}

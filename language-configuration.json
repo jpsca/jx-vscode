@@ -1,0 +1,43 @@
+{
+  "comments": {
+    "blockComment": ["{#", "#}"]
+  },
+  "brackets": [
+    ["{%", "%}"],
+    ["{{", "}}"],
+    ["{#", "#}"],
+    ["(", ")"],
+    ["[", "]"],
+    ["{", "}"],
+    ["<", ">"]
+  ],
+  "autoClosingPairs": [
+    { "open": "{%", "close": " %}" },
+    { "open": "{{", "close": " }}" },
+    { "open": "{#", "close": " #}" },
+    { "open": "(", "close": ")" },
+    { "open": "[", "close": "]" },
+    { "open": "{", "close": "}" },
+    { "open": "\"", "close": "\"" },
+    { "open": "'", "close": "'" },
+    { "open": "<", "close": ">" }
+  ],
+  "surroundingPairs": [
+    { "open": "\"", "close": "\"" },
+    { "open": "'", "close": "'" },
+    { "open": "(", "close": ")" },
+    { "open": "[", "close": "]" },
+    { "open": "{", "close": "}" },
+    { "open": "<", "close": ">" }
+  ],
+  "folding": {
+    "markers": {
+      "start": "\\{%[-\\s]*(block|if|for|macro|call|filter|slot|fill)\\b",
+      "end": "\\{%[-\\s]*(endblock|endif|endfor|endmacro|endcall|endfilter|endslot|endfill)\\b"
+    }
+  },
+  "indentationRules": {
+    "increaseIndentPattern": "\\{%[-\\s]*(block|if|for|macro|call|filter|slot|fill|elif|else)\\b.*%\\}|<(?!area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)([a-zA-Z][\\w-]*)(?:[^/>])*>",
+    "decreaseIndentPattern": "\\{%[-\\s]*(endblock|endif|endfor|endmacro|endcall|endfilter|endslot|endfill|elif|else)\\b.*%\\}|</[a-zA-Z][\\w-]*>"
+  }
+}
