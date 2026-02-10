@@ -42,18 +42,24 @@ Language support for a [Jx](https://jx.scaletti.dev/) (Jinja2-based component li
 
 ## Installation
 
-Launch VS Code Quick Open (Ctrl+P), paste the following command, and press ENTER.
+Launch VSCode Quick Open (ShiftCtrl+P), paste the following command, and press ENTER.
 
 ```bash
 ext install jpscaletti.jinja-jx
 ```
 
-## Commands
+Alternatively, download the the `jinja-jx-0.1.0.vsix` file, Launch VSCode Quick Command (Shift+Ctrl+P), and run "Estensions: Install from VSIX..."
+
+
+## Development
+
+### Architecture
+
+TypeScript + VS Code API (no LSP). Diagnostics shell out to the `jx` Python CLI.
+
+### Commands
 
 - `npm run compile` — build TypeScript
 - `npm run watch` — build in watch mode
 - F5 in VS Code — launch Extension Development Host
 
-## Architecture
-
-TypeScript + VS Code API (no LSP). Diagnostics shell out to the `jx` Python CLI.
