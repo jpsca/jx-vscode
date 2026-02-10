@@ -1,4 +1,4 @@
-# Jx VSCode extension
+# Jinja - Jx
 
 Language support for a [Jx](https://jx.scaletti.dev/) (Jinja2-based component library).
 
