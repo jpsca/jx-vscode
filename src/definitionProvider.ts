@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { parseImports, JxImport } from "./jxParser";
+import { parseImports } from "./jxParser";
 
 // Mirrors parser.py re_tag_name
 const RX_COMPONENT_TAG = /[A-Z][0-9A-Za-z_.:$-]*/;
