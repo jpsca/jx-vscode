@@ -2,7 +2,7 @@
   "name": "jinja-jx",
   "displayName": "Jx",
   "description": "Syntax highlighting, snippets, and go-to-definition for Jx (Jinja2 component library)",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "publisher": "jpscaletti",
   "repository": {
     "type": "git",

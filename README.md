@@ -48,18 +48,4 @@ Launch VSCode Quick Open (ShiftCtrl+P), paste the following command, and press E
 ext install jpscaletti.jinja-jx
 ```
 
-Alternatively, download the the `jinja-jx-0.1.0.vsix` file, Launch VSCode Quick Command (Shift+Ctrl+P), and run "Estensions: Install from VSIX..."
-
-
-## Development
-
-### Architecture
-
-TypeScript + VS Code API (no LSP). Diagnostics shell out to the `jx` Python CLI.
-
-### Commands
-
-- `npm run compile` — build TypeScript
-- `npm run watch` — build in watch mode
-- F5 in VS Code — launch Extension Development Host
-
+Alternatively, download the the `jinja-jx-*.vsix` file, Launch VSCode Quick Command (Shift+Ctrl+P), and run "Estensions: Install from VSIX..."

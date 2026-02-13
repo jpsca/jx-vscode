@@ -1,11 +1,14 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { parseImports } from "./jxParser";
+import { CatalogScanner } from "./catalogScanner";
 
 // Mirrors parser.py re_tag_name
 const RX_COMPONENT_TAG = /[A-Z][0-9A-Za-z_.:$-]*/;
 
 export class JxDefinitionProvider implements vscode.DefinitionProvider {
+  constructor(private catalogScanner: CatalogScanner) {}
+
   async provideDefinition(
     document: vscode.TextDocument,
     position: vscode.Position,
@@ -62,25 +65,62 @@ export class JxDefinitionProvider implements vscode.DefinitionProvider {
     if (importPath.startsWith("./") || importPath.startsWith("../")) {
       const currentDir = path.dirname(currentFileUri.fsPath);
       const resolved = path.resolve(currentDir, importPath);
-      const uri = vscode.Uri.file(resolved);
-      try {
-        await vscode.workspace.fs.stat(uri);
-        return new vscode.Location(uri, new vscode.Position(0, 0));
-      } catch {
-        return undefined;
-      }
+      return this.locationIfExists(resolved);
     }
 
-    // Prefixed path (e.g. @ui/modal.jinja): strip prefix, search workspace
-    let searchPath = importPath;
+    // Prefixed path (e.g. @ui/modal.jinja): resolve from catalog folders with matching prefix
     if (importPath.startsWith("@")) {
       const slashIndex = importPath.indexOf("/");
       if (slashIndex !== -1) {
-        searchPath = importPath.substring(slashIndex + 1);
+        const prefix = importPath.substring(1, slashIndex);
+        const relativePath = importPath.substring(slashIndex + 1);
+
+        // Try catalog folders with matching prefix
+        for (const folder of this.catalogScanner.folders) {
+          if (folder.prefix === prefix) {
+            const resolved = path.join(folder.absPath, relativePath);
+            const loc = await this.locationIfExists(resolved);
+            if (loc) {
+              return loc;
+            }
+          }
+        }
+
+        // Fallback: workspace search with stripped prefix
+        return this.workspaceSearch(relativePath);
       }
     }
 
-    // Absolute / prefixed: search workspace
+    // Absolute catalog path: try catalog folders without prefix first
+    for (const folder of this.catalogScanner.folders) {
+      if (!folder.prefix) {
+        const resolved = path.join(folder.absPath, importPath);
+        const loc = await this.locationIfExists(resolved);
+        if (loc) {
+          return loc;
+        }
+      }
+    }
+
+    // Fallback: workspace glob search
+    return this.workspaceSearch(importPath);
+  }
+
+  private async locationIfExists(
+    absPath: string
+  ): Promise<vscode.Location | undefined> {
+    const uri = vscode.Uri.file(absPath);
+    try {
+      await vscode.workspace.fs.stat(uri);
+      return new vscode.Location(uri, new vscode.Position(0, 0));
+    } catch {
+      return undefined;
+    }
+  }
+
+  private async workspaceSearch(
+    searchPath: string
+  ): Promise<vscode.Location | undefined> {
     const files = await vscode.workspace.findFiles(
       `**/${searchPath}`,
       "**/node_modules/**",
@@ -89,7 +129,6 @@ export class JxDefinitionProvider implements vscode.DefinitionProvider {
     if (files.length > 0) {
       return new vscode.Location(files[0], new vscode.Position(0, 0));
     }
-
     return undefined;
   }
 }

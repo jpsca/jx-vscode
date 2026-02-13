@@ -2,11 +2,13 @@ import * as assert from "assert";
 import * as path from "path";
 import * as vscode from "vscode";
 import { JxDefinitionProvider } from "../../definitionProvider";
+import { CatalogScanner } from "../../catalogScanner";
 
 const fixturesPath = path.resolve(__dirname, "../../../src/test/fixtures");
 
 suite("JxDefinitionProvider", () => {
-  const provider = new JxDefinitionProvider();
+  const scanner = new CatalogScanner();
+  const provider = new JxDefinitionProvider(scanner);
 
   test("resolves definition from import path", async () => {
     const sampleUri = vscode.Uri.file(

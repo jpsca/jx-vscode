@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import * as cp from "child_process";
 import * as path from "path";
+import { CatalogScanner } from "./catalogScanner";
 
 interface CheckError {
   file: string;
@@ -18,7 +19,7 @@ export class JxDiagnosticsProvider implements vscode.Disposable {
   private diagnosticCollection: vscode.DiagnosticCollection;
   private disposables: vscode.Disposable[] = [];
 
-  constructor() {
+  constructor(private catalogScanner: CatalogScanner) {
     this.diagnosticCollection =
       vscode.languages.createDiagnosticCollection("jx");
 
@@ -81,15 +82,29 @@ export class JxDiagnosticsProvider implements vscode.Disposable {
   }
 
   private async checkFile(document: vscode.TextDocument): Promise<void> {
+    await this.catalogScanner.ready();
+
+    // No catalog folders found — skip diagnostics to avoid false "Unknown import" errors
+    if (this.catalogScanner.folders.length === 0) {
+      this.diagnosticCollection.delete(document.uri);
+      return;
+    }
+
     const pythonPath = await this.resolvePythonPath();
     const filePath = document.uri.fsPath;
     const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
     const cwd = workspaceFolder?.uri.fsPath ?? path.dirname(filePath);
 
+    // Build args: jx check --format json <file> [catalogFolder...]
+    const args = ["-m", "jx", "check", "--format", "json", filePath];
+    for (const folder of this.catalogScanner.folders) {
+      args.push(folder.absPath);
+    }
+
     return new Promise<void>((resolve) => {
       cp.execFile(
         pythonPath,
-        ["-m", "jx", "check", "--format", "json", filePath],
+        args,
         { cwd, timeout: 10000 },
         (error, stdout, _stderr) => {
           // jx check exits 1 when errors are found, which is normal
