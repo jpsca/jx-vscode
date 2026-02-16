@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 import * as cp from "child_process";
-import * as path from "path";
 import { CatalogScanner } from "./catalogScanner";
 
 interface CheckError {
@@ -8,6 +7,7 @@ interface CheckError {
   line: number | null;
   message: string;
   suggestion: string | null;
+  abs_path: string | null;
 }
 
 interface CheckResult {
@@ -18,6 +18,8 @@ interface CheckResult {
 export class JxDiagnosticsProvider implements vscode.Disposable {
   private diagnosticCollection: vscode.DiagnosticCollection;
   private disposables: vscode.Disposable[] = [];
+  private previousUris = new Set<string>();
+  private debounceTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(private catalogScanner: CatalogScanner) {
     this.diagnosticCollection =
@@ -27,28 +29,36 @@ export class JxDiagnosticsProvider implements vscode.Disposable {
       this.diagnosticCollection,
 
       vscode.workspace.onDidSaveTextDocument((doc) => {
-        if (doc.languageId === "jx") {
-          this.checkFile(doc);
+        if (doc.languageId === "jx" || doc.languageId === "python") {
+          this.scheduleCheck();
         }
       }),
 
       vscode.workspace.onDidOpenTextDocument((doc) => {
         if (doc.languageId === "jx") {
-          this.checkFile(doc);
+          this.scheduleCheck();
         }
       }),
 
       vscode.workspace.onDidCloseTextDocument((doc) => {
         this.diagnosticCollection.delete(doc.uri);
+        this.previousUris.delete(doc.uri.toString());
       })
     );
 
-    // Check all already-open jx documents
-    for (const doc of vscode.workspace.textDocuments) {
-      if (doc.languageId === "jx") {
-        this.checkFile(doc);
-      }
+    // Initial check
+    this.scheduleCheck();
+  }
+
+  /** Debounce checks to avoid running multiple times in quick succession. */
+  private scheduleCheck(): void {
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
     }
+    this.debounceTimer = setTimeout(() => {
+      this.debounceTimer = undefined;
+      this.checkAll();
+    }, 300);
   }
 
   private async resolvePythonPath(): Promise<string> {
@@ -81,36 +91,50 @@ export class JxDiagnosticsProvider implements vscode.Disposable {
     return "python3";
   }
 
-  private async checkFile(document: vscode.TextDocument): Promise<void> {
+  private resolveCatalogPath(): string | undefined {
+    // 1. User setting
+    const configured = vscode.workspace
+      .getConfiguration("jx")
+      .get<string>("catalogPath", "");
+    if (configured) {
+      return configured;
+    }
+
+    // 2. Auto-detected from CatalogScanner
+    if (this.catalogScanner.catalogPaths.length > 0) {
+      return this.catalogScanner.catalogPaths[0];
+    }
+
+    return undefined;
+  }
+
+  private async checkAll(): Promise<void> {
     await this.catalogScanner.ready();
 
-    // No catalog folders found — skip diagnostics to avoid false "Unknown import" errors
-    if (this.catalogScanner.folders.length === 0) {
-      this.diagnosticCollection.delete(document.uri);
+    const catalogPath = this.resolveCatalogPath();
+    if (!catalogPath) {
+      // No catalog path available — clear all and skip
+      this.diagnosticCollection.clear();
+      this.previousUris.clear();
       return;
     }
 
     const pythonPath = await this.resolvePythonPath();
-    const filePath = document.uri.fsPath;
-    const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri);
-    const cwd = workspaceFolder?.uri.fsPath ?? path.dirname(filePath);
+    const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+    const cwd = workspaceFolder?.uri.fsPath;
 
-    // Build args: jx check --format json <file> [catalogFolder...]
-    const args = ["-m", "jx", "check", "--format", "json", filePath];
-    for (const folder of this.catalogScanner.folders) {
-      args.push(folder.absPath);
-    }
+    const args = ["-m", "jx", "check", catalogPath, "--format", "json"];
 
     return new Promise<void>((resolve) => {
       cp.execFile(
         pythonPath,
         args,
-        { cwd, timeout: 10000 },
-        (error, stdout, _stderr) => {
-          // jx check exits 1 when errors are found, which is normal
+        { cwd, timeout: 15000 },
+        (_error, stdout, _stderr) => {
           const output = stdout.trim();
           if (!output) {
-            this.diagnosticCollection.delete(document.uri);
+            this.diagnosticCollection.clear();
+            this.previousUris.clear();
             resolve();
             return;
           }
@@ -120,30 +144,60 @@ export class JxDiagnosticsProvider implements vscode.Disposable {
             result = JSON.parse(output);
           } catch {
             // Not valid JSON — jx might not be installed or wrong version
-            this.diagnosticCollection.delete(document.uri);
+            this.diagnosticCollection.clear();
+            this.previousUris.clear();
             resolve();
             return;
           }
 
-          const diagnostics: vscode.Diagnostic[] = result.errors.map((err) => {
-            const line = err.line ? err.line - 1 : 0;
-            const range = new vscode.Range(line, 0, line, Number.MAX_VALUE);
-
-            let message = err.message;
-            if (err.suggestion) {
-              message += ` (did you mean '${err.suggestion}'?)`;
+          // Group errors by absolute file path
+          const errorsByFile = new Map<string, CheckError[]>();
+          for (const err of result.errors) {
+            const filePath = err.abs_path;
+            if (!filePath) {
+              continue;
             }
+            const existing = errorsByFile.get(filePath) ?? [];
+            existing.push(err);
+            errorsByFile.set(filePath, existing);
+          }
 
-            const diagnostic = new vscode.Diagnostic(
-              range,
-              message,
-              vscode.DiagnosticSeverity.Error
-            );
-            diagnostic.source = "jx";
-            return diagnostic;
-          });
+          // Set diagnostics for files with errors
+          const currentUris = new Set<string>();
+          for (const [filePath, errors] of errorsByFile) {
+            const uri = vscode.Uri.file(filePath);
+            const uriStr = uri.toString();
+            currentUris.add(uriStr);
 
-          this.diagnosticCollection.set(document.uri, diagnostics);
+            const diagnostics: vscode.Diagnostic[] = errors.map((err) => {
+              const line = err.line ? err.line - 1 : 0;
+              const range = new vscode.Range(line, 0, line, Number.MAX_VALUE);
+
+              let message = err.message;
+              if (err.suggestion) {
+                message += ` (did you mean '${err.suggestion}'?)`;
+              }
+
+              const diagnostic = new vscode.Diagnostic(
+                range,
+                message,
+                vscode.DiagnosticSeverity.Error
+              );
+              diagnostic.source = "jx";
+              return diagnostic;
+            });
+
+            this.diagnosticCollection.set(uri, diagnostics);
+          }
+
+          // Clear diagnostics from files that no longer have errors
+          for (const uriStr of this.previousUris) {
+            if (!currentUris.has(uriStr)) {
+              this.diagnosticCollection.set(vscode.Uri.parse(uriStr), []);
+            }
+          }
+
+          this.previousUris = currentUris;
           resolve();
         }
       );
@@ -151,6 +205,9 @@ export class JxDiagnosticsProvider implements vscode.Disposable {
   }
 
   dispose() {
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+    }
     for (const d of this.disposables) {
       d.dispose();
     }

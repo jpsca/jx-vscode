@@ -2,7 +2,7 @@
   "name": "jinja-jx",
   "displayName": "Jx",
   "description": "Syntax highlighting, snippets, and go-to-definition for Jx (Jinja2 component library)",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publisher": "jpscaletti",
   "repository": {
     "type": "git",
@@ -59,6 +59,12 @@
           "type": "string",
           "default": "",
           "description": "Path to Python interpreter (leave empty to auto-detect from the Python extension or PATH)"
+        },
+        "jx.catalogPath": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "description": "Import path to the Catalog instance (e.g. 'myapp.setup:catalog' or 'path/to/file.py:catalog'). Leave empty to auto-detect."
         }
       }
     }

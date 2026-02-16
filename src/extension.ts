@@ -31,7 +31,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration("jx.check.enabled")) {
+      if (e.affectsConfiguration("jx.check.enabled") || e.affectsConfiguration("jx.catalogPath")) {
         const enabled = vscode.workspace
           .getConfiguration("jx")
           .get<boolean>("check.enabled", true);
@@ -41,6 +41,11 @@ export function activate(context: vscode.ExtensionContext) {
         } else if (!enabled && diagnosticsProvider) {
           diagnosticsProvider.dispose();
           diagnosticsProvider = undefined;
+        } else if (enabled && diagnosticsProvider) {
+          // Catalog path changed — recreate to pick up new config
+          diagnosticsProvider.dispose();
+          diagnosticsProvider = new JxDiagnosticsProvider(catalogScanner);
+          context.subscriptions.push(diagnosticsProvider);
         }
       }
     })
