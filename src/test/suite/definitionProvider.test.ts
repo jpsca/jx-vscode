@@ -12,11 +12,11 @@ suite("JxDefinitionProvider", () => {
 
   test("resolves definition from import path", async () => {
     const sampleUri = vscode.Uri.file(
-      path.join(fixturesPath, "sample.jinja")
+      path.join(fixturesPath, "sample.jx")
     );
     const doc = await vscode.workspace.openTextDocument(sampleUri);
 
-    // Position inside the path string "./button.jinja"
+    // Position inside the path string "./button.jx"
     const pathPos = new vscode.Position(0, 15);
     const result = await provider.provideDefinition(
       doc,
@@ -27,14 +27,14 @@ suite("JxDefinitionProvider", () => {
     assert.ok(result, "Should return a definition");
     const loc = result as vscode.Location;
     assert.ok(
-      loc.uri.fsPath.endsWith("button.jinja"),
-      `Expected button.jinja, got ${loc.uri.fsPath}`
+      loc.uri.fsPath.endsWith("button.jx"),
+      `Expected button.jx, got ${loc.uri.fsPath}`
     );
   });
 
   test("resolves definition from alias name", async () => {
     const sampleUri = vscode.Uri.file(
-      path.join(fixturesPath, "sample.jinja")
+      path.join(fixturesPath, "sample.jx")
     );
     const doc = await vscode.workspace.openTextDocument(sampleUri);
 
@@ -49,14 +49,14 @@ suite("JxDefinitionProvider", () => {
     assert.ok(result, "Should return a definition");
     const loc = result as vscode.Location;
     assert.ok(
-      loc.uri.fsPath.endsWith("button.jinja"),
-      `Expected button.jinja, got ${loc.uri.fsPath}`
+      loc.uri.fsPath.endsWith("button.jx"),
+      `Expected button.jx, got ${loc.uri.fsPath}`
     );
   });
 
   test("resolves definition from component tag", async () => {
     const sampleUri = vscode.Uri.file(
-      path.join(fixturesPath, "sample.jinja")
+      path.join(fixturesPath, "sample.jx")
     );
     const doc = await vscode.workspace.openTextDocument(sampleUri);
 
@@ -72,14 +72,14 @@ suite("JxDefinitionProvider", () => {
     assert.ok(result, "Should return a definition");
     const loc = result as vscode.Location;
     assert.ok(
-      loc.uri.fsPath.endsWith("button.jinja"),
-      `Expected button.jinja, got ${loc.uri.fsPath}`
+      loc.uri.fsPath.endsWith("button.jx"),
+      `Expected button.jx, got ${loc.uri.fsPath}`
     );
   });
 
   test("returns undefined for non-component text", async () => {
     const sampleUri = vscode.Uri.file(
-      path.join(fixturesPath, "sample.jinja")
+      path.join(fixturesPath, "sample.jx")
     );
     const doc = await vscode.workspace.openTextDocument(sampleUri);
 

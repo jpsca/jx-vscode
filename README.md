@@ -1,7 +1,7 @@
 # Jinja - Jx
 
 Language support for a [Jx](https://jx.scaletti.dev/) (Jinja2-based component library).
-Requires `jx >= 0.8.0`.
+Requires `jx >= 0.10`.
 
 ![Demo](https://raw.githubusercontent.com/jpsca/jx-vscode/main/demo.png)
 
@@ -9,7 +9,7 @@ Requires `jx >= 0.8.0`.
 
 ### Syntax Highlighting
 
-The extension provides full syntax highlighting for `.jinja` files, including:
+The extension provides full syntax highlighting for `.jx` files, including:
 
 - Jx pragmas: `{#import ... #}`, `{#def ... #}`, `{#css ... #}`, `{#js ... #}`
 - PascalCase component tags (e.g., `<MyComponent>`, `<Card />`)
@@ -20,18 +20,18 @@ The extension provides full syntax highlighting for `.jinja` files, including:
 
 <kbd>Ctrl</kbd>+click (or <kbd>Cmd</kbd>+click on macOS) to jump to a component file. This works from three places:
 
-- **The import path** — click on the string in `{#import "card.jinja" as Card #}`
+- **The import path** — click on the string in `{#import "card.jx" as Card #}`
 - **The alias name** — click on `Card` in the import declaration
 - **A component tag** — click on `<Card>` or `</Card>` anywhere in the template
 
-The extension resolves paths using your catalog folders (auto-detected from Python files), relative paths (`./`, `../`), and prefixed paths (`@ui/modal.jinja`).
+The extension resolves paths using your catalog folders (auto-detected from Python files), relative paths (`./`, `../`), and prefixed paths (`@ui/modal.jx`).
 
 ### Diagnostics
 
 The extension runs `jx check` automatically and shows errors inline in the editor. Checks run:
 
-- On save (`.jinja` and `.py` files)
-- When a `.jinja` file is opened
+- On save (`.jx` and `.py` files)
+- When a `.jx` file is opened
 - On startup
 
 Errors appear in the **Problems** panel and as red underlines in the editor, including "did you mean?" suggestions for typos.
@@ -61,7 +61,7 @@ The extension automatically scans your workspace for Python files that use `Cata
 - Component folder paths (used by go-to-definition)
 - Catalog import paths (used by diagnostics)
 
-If no `Catalog()` call is found, it falls back to looking for `.jinja` files inside well-known folder names (`views`, `components`, `templates`).
+If no `Catalog()` call is found, it falls back to looking for `.jx` files inside well-known folder names (`views`, `components`, `templates`).
 
 The scan re-runs whenever a `.py` file is created, changed, or deleted.
 
@@ -71,7 +71,7 @@ The scan re-runs whenever a `.py` file is created, changed, or deleted.
 Launch VSCode Quick Open (<kbd>Ctrl</kbd>+<kbd>P</kbd>), paste the following command, and press ENTER.
 
 ```bash
-ext install jpscaletti.jinja-jx
+ext install jpscaletti.jx-jx
 ```
 
 Alternatively:

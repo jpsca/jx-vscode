@@ -2,7 +2,7 @@
   "name": "jinja-jx",
   "displayName": "Jx",
   "description": "Syntax highlighting, snippets, and go-to-definition for Jx (Jinja2 component library)",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "publisher": "jpscaletti",
   "repository": {
     "type": "git",
@@ -16,9 +16,6 @@
     "Programming Languages",
     "Snippets"
   ],
-  "activationEvents": [
-    "onLanguage:jx"
-  ],
   "main": "./out/extension.js",
   "contributes": {
     "languages": [
@@ -29,6 +26,7 @@
           "jx"
         ],
         "extensions": [
+          ".jx",
           ".jinja"
         ],
         "configuration": "./language-configuration.json"

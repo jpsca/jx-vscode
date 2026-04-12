@@ -1,4 +1,4 @@
-{# import "./button.jinja" as Button #}
+{# import "./button.jx" as Button #}
 
 <div>
   <Button label="Click me" />
