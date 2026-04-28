@@ -71,12 +71,12 @@ The scan re-runs whenever a `.py` file is created, changed, or deleted.
 Launch VSCode Quick Open (<kbd>Ctrl</kbd>+<kbd>P</kbd>), paste the following command, and press ENTER.
 
 ```bash
-ext install jpscaletti.jx-jx
+ext install jpscaletti.jinja-jx
 ```
 
 Alternatively:
 
-1. Download the the `jinja-jx-VERSION.vsix` file from the [GitHub repo](https://github.com/jpsca/jx-vscode){_target="blank"}
+1. Download the the `jinja-jx-VERSION.vsix` file from this repo.
 2. Launch VSCode Quick Command (<kbd>Shift</kbd>+<kbd>Ctrl</kbd>+<kbd>P</kbd>)
 3. Run "Extensions: Install from VSIX..."
 
